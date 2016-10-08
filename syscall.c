@@ -7,6 +7,8 @@
 #include "x86.h"
 #include "syscall.h"
 
+void getname(int a); 
+
 // User code makes a system call with INT T_SYSCALL.
 // System call number in %eax.
 // Arguments on the stack, from the user call to the C
@@ -98,6 +100,9 @@ extern int sys_unlink(void);
 extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
+extern int sys_time(void);
+extern int sys_traps(void);
+extern int sys_debug(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -121,7 +126,13 @@ static int (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_time]    sys_time,
+[SYS_traps]   sys_traps,
+[SYS_debug]   sys_debug
+
 };
+
+
 
 void
 syscall(void)
@@ -129,11 +140,109 @@ syscall(void)
   int num;
 
   num = proc->tf->eax;
-  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
+  
+  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) 
+  {
+    
     proc->tf->eax = syscalls[num]();
+    
+    if (proc->debug == 1)
+    {
+      if (num != 16)
+      {
+         cprintf("[*] SYSTEM CALL :: pid: %d, proc: %s / trap -> [", proc->pid, proc->name);
+         getname(num);
+         cprintf("] -- TRAP COUNT --> %d\n", proc->trap_count);
+      }
+    }
+    
+    proc->trap_count++;
+    
   } else {
     cprintf("%d %s: unknown sys call %d\n",
             proc->pid, proc->name, num);
     proc->tf->eax = -1;
   }
+}
+
+void getname(int a)
+{
+   switch (a)
+  {
+     case 1:
+     cprintf("fork");
+     break;
+     case 2:
+     cprintf("exit");
+     break;
+     case 3:
+     cprintf("wait");
+     break;
+     case 4:
+     cprintf("pipe");
+     break;
+     case 5:
+     cprintf("read");
+     break;
+     case 6:
+     cprintf("kill");
+     break;
+     case 7:
+     cprintf("exec");
+     break;
+     case 8:
+     cprintf("fstat");
+     break;
+     case 9:
+     cprintf("chdir");
+     break;
+     case 10:
+     cprintf("dup");
+     break;
+     case 11:
+     cprintf("getpid");
+     break;
+     case 12:
+     cprintf("sbrk");
+     break;
+     case 13:
+     cprintf("sleep");
+     break;
+     case 14:
+     cprintf("uptime");
+     break;
+     case 15:
+     cprintf("open");
+     break;
+     case 16:
+     cprintf("write");
+     break;
+     case 17:
+     cprintf("mknod");
+     break;
+     case 18:
+     cprintf("unlink");
+     break;
+     case 19:
+     cprintf("link");
+     break;
+     case 20:
+     cprintf("mkdir");
+     break;
+     case 21:
+     cprintf("close");
+     break;
+     case 22:
+     cprintf("time");
+     break;
+     case 23:
+     cprintf("trap counter");
+     break;
+     case 24:
+     cprintf("debug");
+     break;
+     default:
+     cprintf("unrecognized syscall");
+     break;
+   }
 }

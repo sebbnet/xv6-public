@@ -35,7 +35,7 @@ idtinit(void)
 //PAGEBREAK: 41
 void
 trap(struct trapframe *tf)
-{
+{ 
   if(tf->trapno == T_SYSCALL){
     if(proc->killed)
       exit();

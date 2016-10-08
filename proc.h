@@ -63,6 +63,11 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  int debug;                   // 1 == print out a lot of sys call debug
+  int start_tick;              // what tick did this process start running on
+  int print_ticks;             // 1 == time sys call occured
+  int trap_count;              // count traps to kernel during lifetime of proc
+  int print_traps;             // 1 == print traps
 };
 
 // Process memory is laid out contiguously, low addresses first:

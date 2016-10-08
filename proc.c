@@ -72,6 +72,12 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+  
+  p->start_tick = -1;
+  p->print_ticks = 0;
+  p->trap_count = 0;
+  p->print_traps = 0;
+  p->debug = 0;
 
   return p;
 }
@@ -112,6 +118,8 @@ userinit(void)
   p->state = RUNNABLE;
 
   release(&ptable.lock);
+  
+  p->start_tick = -1;
 }
 
 // Grow current process's memory by n bytes.
@@ -170,12 +178,17 @@ fork(void)
   safestrcpy(np->name, proc->name, sizeof(proc->name));
 
   pid = np->pid;
-
+  
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
-
   release(&ptable.lock);
+  
+  np->start_tick = ticks;
+  np->trap_count = 0;
+  np->print_traps = proc->print_traps;
+  np->print_ticks = proc->print_ticks;
+  np->debug = proc->debug;
 
   return pid;
 }
@@ -219,6 +232,15 @@ exit(void)
     }
   }
 
+  if (proc->print_ticks == 1)
+  {
+  	cprintf("[#] Program: [%d] %s took %d ticks.\n", proc->pid, proc->name, (ticks - proc->start_tick));
+  }
+  if (proc->print_traps == 1)
+  {
+  	cprintf("[#] Program: [%d] %s experienced %d traps.\n", proc->pid, proc->name, proc->trap_count);
+  }
+  
   // Jump into the scheduler, never to return.
   proc->state = ZOMBIE;
   sched();

@@ -415,6 +415,12 @@ sys_exec(void)
     if(fetchstr(uarg, &argv[i]) < 0)
       return -1;
   }
+  
+  if (proc->start_tick == -1)
+  {
+     proc->start_tick = ticks;
+  }
+  
   return exec(path, argv);
 }
 

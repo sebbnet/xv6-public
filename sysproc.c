@@ -89,3 +89,19 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+void sys_time(void)
+{
+    proc->print_ticks = 1;
+}
+
+void sys_traps(void)
+{
+    proc->print_traps = 1;
+}
+
+void sys_debug(void)
+{
+
+       proc->debug = 1;
+}
