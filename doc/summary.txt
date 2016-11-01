@@ -1,0 +1,21 @@
+In Makefile:
+	- Need to change the start point of the virtual address in user programs from 0 to the start of the second page 0x1000
+	- We should change 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^    to    $(LD) $(LDFLAGS) -N -e main -Ttext 0x1000 -o $@ $
+	- In doing this we make 0x0000 invalid and so space that is unable to be accessed by the user (1000_16 == 4096_10)
+	
+In exec.c:
+
+	- When loading the program into memory, currently we can freely access the first page, i.e. 0x0000 - 0xffff (0 - 4095), if we make the proc mem size the same as the page size (thereby beginning at second page) then this access will be prevented and dereferencing null pointer will fail
+	- Change   sz = 0;     to       sz = PGSIZE;
+	
+	
+In vm.c:
+	-  In copyuvm we should start copying the parent's proc memory starting from the beginning of the second page, as the first was made unavailable
+	- Change   for(i = 0; i < sz; i += PGSIZE){        to         for(i = PGSIZE; i < sz; i += PGSIZE){
+	
+	
+In syscall.c:
+	- We should also prevent syscalls from being able to freely check out the value at 0x0
+	- Add checks to any place where addresses are being dereferenced:
+		in fetchint, fetchstr ==> if( .... || addr == 0)
+		in argptr ==> if ( .... || (uint) i == 0)
